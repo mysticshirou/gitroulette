@@ -1,17 +1,16 @@
 import Link from 'next/link';
-import { GitBranch, Clock, Sparkles, Zap } from 'lucide-react';
+import { GitBranch, Clock, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { timeAgo } from '@/lib/utils';
+import db from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 async function getRepositories() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/repos`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return { repositories: [] };
-    const data = await res.json();
-    return data;
+    const repositories = await db.getAllRepositories();
+    return { repositories };
   } catch {
     return { repositories: [] };
   }
@@ -45,113 +44,6 @@ export default async function Home() {
               </Button>
             </Link>
           </div>
-        </div>
-
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
-          <Card className="border-neon-purple/50 bg-card/50 backdrop-blur hover:glow-border transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center text-neon-purple">
-                <Zap className="mr-2 h-6 w-6" />
-                Neural Architecture
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground/70">
-                Every operation leverages advanced Large Language Model processing, delivering
-                dynamic, context-aware version control that adapts to your workflow.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-neon-cyan/50 bg-card/50 backdrop-blur hover:glow-border transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center text-neon-cyan">
-                <GitBranch className="mr-2 h-6 w-6" />
-                Comprehensive Command Suite
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground/70">
-                Complete git command compatibility including commit, branch, merge, and push operations,
-                enhanced with AI-driven diff generation and intelligent conflict resolution.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-neon-pink/50 bg-card/50 backdrop-blur hover:glow-border transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center text-neon-pink">
-                <Sparkles className="mr-2 h-6 w-6" />
-                Conversational State
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground/70">
-                Revolutionary stateless architecture maintains complete repository history through
-                persistent conversational context, enabling unprecedented flexibility.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Comparison Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-center">
-            <span className="text-gradient">Comparative Analysis</span>
-          </h2>
-          <Card className="border-neon-purple/50 bg-card/50 backdrop-blur">
-            <CardContent className="p-8">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-4 px-4 font-semibold">Feature</th>
-                      <th className="text-left py-4 px-4 font-semibold">Traditional Git</th>
-                      <th className="text-left py-4 px-4 font-semibold text-neon-purple">GitRoulette</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-foreground/80">
-                    <tr className="border-b border-border/50">
-                      <td className="py-3 px-4 font-medium">Consistency</td>
-                      <td className="py-3 px-4">Deterministic results</td>
-                      <td className="py-3 px-4 text-neon-cyan">Dynamic AI-driven outputs</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-3 px-4 font-medium">Network Requirement</td>
-                      <td className="py-3 px-4">Works offline</td>
-                      <td className="py-3 px-4 text-neon-cyan">Cloud-native architecture</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-3 px-4 font-medium">Processing Speed</td>
-                      <td className="py-3 px-4">Millisecond operations</td>
-                      <td className="py-3 px-4 text-neon-cyan">Thoughtful AI processing</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-3 px-4 font-medium">Diff Accuracy</td>
-                      <td className="py-3 px-4">Line-by-line precision</td>
-                      <td className="py-3 px-4 text-neon-cyan">Natural language interpretation</td>
-                    </tr>
-                    <tr className="border-b border-border/50">
-                      <td className="py-3 px-4 font-medium">Cost Model</td>
-                      <td className="py-3 px-4">Free</td>
-                      <td className="py-3 px-4 text-neon-cyan">Transparent pay-per-use</td>
-                    </tr>
-                    <tr>
-                      <td className="py-3 px-4 font-medium">History Integrity</td>
-                      <td className="py-3 px-4">Cryptographic hashing</td>
-                      <td className="py-3 px-4 text-neon-cyan">Conversational memory</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p className="mt-6 text-center text-foreground/70 italic">
-                As demonstrated above, GitRoulette's AI-powered approach provides unique advantages that
-                traditional version control cannot match. Our innovative architecture transforms routine
-                operations into intelligent, context-aware experiences.
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Repositories */}

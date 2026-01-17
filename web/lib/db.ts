@@ -1,9 +1,10 @@
-import { createClient } from '@vercel/postgres';
+import postgres from 'postgres';
 import { Repository, Branch, Commit, File, LLMMessage } from './types';
 
-// Create database client with connection string
-const client = createClient({
-  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+// Create SQL client
+const sql = postgres(process.env.DATABASE_URL || process.env.POSTGRES_URL || '', {
+  ssl: 'require',
+  max: 10,
 });
 
 // Generate UUID
@@ -17,14 +18,14 @@ export const db = {
     const id = generateId();
     const now = new Date().toISOString();
 
-    await client.sql`
+    await sql`
       INSERT INTO repositories (id, name, created_at, updated_at)
       VALUES (${id}, ${name}, ${now}, ${now})
     `;
 
     // Create default main branch
     const branchId = generateId();
-    await client.sql`
+    await sql`
       INSERT INTO branches (id, repo_id, name, created_at)
       VALUES (${branchId}, ${id}, 'main', ${now})
     `;
@@ -38,22 +39,22 @@ export const db = {
   },
 
   async getRepository(id: string): Promise<Repository | null> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT * FROM repositories WHERE id = ${id}
     `;
-    return result.rows[0] as Repository || null;
+    return result[0] as Repository || null;
   },
 
   async getAllRepositories(): Promise<Repository[]> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT * FROM repositories
       ORDER BY updated_at DESC
     `;
-    return result.rows as Repository[];
+    return Array.from(result) as Repository[];
   },
 
   async updateRepository(id: string): Promise<void> {
-    await client.sql`
+    await sql`
       UPDATE repositories
       SET updated_at = ${new Date().toISOString()}
       WHERE id = ${id}
@@ -62,26 +63,26 @@ export const db = {
 
   // Branches
   async getBranches(repoId: string): Promise<Branch[]> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT * FROM branches
       WHERE repo_id = ${repoId}
     `;
-    return result.rows as Branch[];
+    return Array.from(result) as Branch[];
   },
 
   async getBranch(repoId: string, branchName: string): Promise<Branch | null> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT * FROM branches
       WHERE repo_id = ${repoId} AND name = ${branchName}
     `;
-    return result.rows[0] as Branch || null;
+    return result[0] as Branch || null;
   },
 
   async createBranch(repoId: string, branchName: string): Promise<Branch> {
     const id = generateId();
     const now = new Date().toISOString();
 
-    await client.sql`
+    await sql`
       INSERT INTO branches (id, repo_id, name, created_at)
       VALUES (${id}, ${repoId}, ${branchName}, ${now})
     `;
@@ -104,7 +105,7 @@ export const db = {
     const id = generateId();
     const now = new Date().toISOString();
 
-    await client.sql`
+    await sql`
       INSERT INTO commits (id, repo_id, branch_id, message, commit_hash, created_at)
       VALUES (${id}, ${repoId}, ${branchId}, ${message}, ${commitHash}, ${now})
     `;
@@ -124,37 +125,37 @@ export const db = {
   async getCommits(repoId: string, branchId?: string): Promise<Commit[]> {
     let result;
     if (branchId) {
-      result = await client.sql`
+      result = await sql`
         SELECT * FROM commits
         WHERE repo_id = ${repoId} AND branch_id = ${branchId}
         ORDER BY created_at DESC
       `;
     } else {
-      result = await client.sql`
+      result = await sql`
         SELECT * FROM commits
         WHERE repo_id = ${repoId}
         ORDER BY created_at DESC
       `;
     }
-    return result.rows as Commit[];
+    return Array.from(result) as Commit[];
   },
 
   async getLatestCommit(repoId: string, branchId: string): Promise<Commit | null> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT * FROM commits
       WHERE repo_id = ${repoId} AND branch_id = ${branchId}
       ORDER BY created_at DESC
       LIMIT 1
     `;
-    return result.rows[0] as Commit || null;
+    return result[0] as Commit || null;
   },
 
   async getCommitCount(repoId: string): Promise<number> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT COUNT(*) as count FROM commits
       WHERE repo_id = ${repoId}
     `;
-    return parseInt(result.rows[0].count, 10);
+    return parseInt(result[0].count, 10);
   },
 
   // Files
@@ -167,7 +168,7 @@ export const db = {
       const id = generateId();
       const now = new Date().toISOString();
 
-      await client.sql`
+      await sql`
         INSERT INTO files (id, repo_id, commit_id, path, content, created_at)
         VALUES (${id}, ${repoId}, ${commitId}, ${filePath}, ${content}, ${now})
       `;
@@ -175,11 +176,11 @@ export const db = {
   },
 
   async getFiles(repoId: string, commitId: string): Promise<File[]> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT * FROM files
       WHERE repo_id = ${repoId} AND commit_id = ${commitId}
     `;
-    return result.rows as File[];
+    return Array.from(result) as File[];
   },
 
   async getLatestFiles(repoId: string, branchId: string): Promise<Record<string, string>> {
@@ -199,14 +200,14 @@ export const db = {
   // LLM History
   async saveLLMHistory(repoId: string, messages: LLMMessage[]): Promise<void> {
     // Remove old history for this repo
-    await client.sql`
+    await sql`
       DELETE FROM llm_history WHERE repo_id = ${repoId}
     `;
 
     // Add new messages
     for (const msg of messages) {
       const id = generateId();
-      await client.sql`
+      await sql`
         INSERT INTO llm_history (id, repo_id, role, content, created_at)
         VALUES (${id}, ${repoId}, ${msg.role}, ${msg.content}, ${msg.timestamp})
       `;
@@ -214,13 +215,13 @@ export const db = {
   },
 
   async getLLMHistory(repoId: string): Promise<LLMMessage[]> {
-    const result = await client.sql`
+    const result = await sql`
       SELECT role, content, created_at as timestamp
       FROM llm_history
       WHERE repo_id = ${repoId}
       ORDER BY created_at ASC
     `;
-    return result.rows as LLMMessage[];
+    return Array.from(result) as LLMMessage[];
   },
 };
 
