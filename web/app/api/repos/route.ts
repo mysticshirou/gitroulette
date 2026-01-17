@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const repo = db.createRepository(name);
+    const repo = await db.createRepository(name);
 
     return NextResponse.json({ id: repo.id, name: repo.name }, { status: 201 });
   } catch (error) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 // GET /api/repos - List all repositories
 export async function GET() {
   try {
-    const repositories = db.getAllRepositories();
+    const repositories = await db.getAllRepositories();
     return NextResponse.json({ repositories });
   } catch (error) {
     console.error('Error fetching repositories:', error);

@@ -1,53 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-import { Database, Repository, Branch, Commit, File, LLMMessage, LLMHistoryRecord } from './types';
+import { createClient } from '@vercel/postgres';
+import { Repository, Branch, Commit, File, LLMMessage } from './types';
 
-const DB_FILE = path.join(process.cwd(), 'data', 'db.json');
-
-// Ensure data directory exists
-function ensureDataDir() {
-  const dataDir = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-}
-
-// Load database from file
-function loadDB(): Database {
-  ensureDataDir();
-
-  if (!fs.existsSync(DB_FILE)) {
-    const emptyDB: Database = {
-      repositories: [],
-      branches: [],
-      commits: [],
-      files: [],
-      llm_history: [],
-    };
-    saveDB(emptyDB);
-    return emptyDB;
-  }
-
-  try {
-    const data = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error loading database:', error);
-    return {
-      repositories: [],
-      branches: [],
-      commits: [],
-      files: [],
-      llm_history: [],
-    };
-  }
-}
-
-// Save database to file
-function saveDB(db: Database) {
-  ensureDataDir();
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
-}
+// Create database client with connection string
+const client = createClient({
+  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+});
 
 // Generate UUID
 function generateId(): string {
@@ -56,139 +13,180 @@ function generateId(): string {
 
 export const db = {
   // Repositories
-  createRepository(name: string): Repository {
-    const database = loadDB();
-    const repo: Repository = {
-      id: generateId(),
-      name,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    database.repositories.push(repo);
+  async createRepository(name: string): Promise<Repository> {
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    await client.sql`
+      INSERT INTO repositories (id, name, created_at, updated_at)
+      VALUES (${id}, ${name}, ${now}, ${now})
+    `;
 
     // Create default main branch
-    const branch: Branch = {
-      id: generateId(),
-      repo_id: repo.id,
-      name: 'main',
-      created_at: new Date().toISOString(),
+    const branchId = generateId();
+    await client.sql`
+      INSERT INTO branches (id, repo_id, name, created_at)
+      VALUES (${branchId}, ${id}, 'main', ${now})
+    `;
+
+    return {
+      id,
+      name,
+      created_at: now,
+      updated_at: now,
     };
-    database.branches.push(branch);
-
-    saveDB(database);
-    return repo;
   },
 
-  getRepository(id: string): Repository | null {
-    const database = loadDB();
-    return database.repositories.find(r => r.id === id) || null;
+  async getRepository(id: string): Promise<Repository | null> {
+    const result = await client.sql`
+      SELECT * FROM repositories WHERE id = ${id}
+    `;
+    return result.rows[0] as Repository || null;
   },
 
-  getAllRepositories(): Repository[] {
-    const database = loadDB();
-    return database.repositories;
+  async getAllRepositories(): Promise<Repository[]> {
+    const result = await client.sql`
+      SELECT * FROM repositories
+      ORDER BY updated_at DESC
+    `;
+    return result.rows as Repository[];
   },
 
-  updateRepository(id: string) {
-    const database = loadDB();
-    const repo = database.repositories.find(r => r.id === id);
-    if (repo) {
-      repo.updated_at = new Date().toISOString();
-      saveDB(database);
-    }
+  async updateRepository(id: string): Promise<void> {
+    await client.sql`
+      UPDATE repositories
+      SET updated_at = ${new Date().toISOString()}
+      WHERE id = ${id}
+    `;
   },
 
   // Branches
-  getBranches(repoId: string): Branch[] {
-    const database = loadDB();
-    return database.branches.filter(b => b.repo_id === repoId);
+  async getBranches(repoId: string): Promise<Branch[]> {
+    const result = await client.sql`
+      SELECT * FROM branches
+      WHERE repo_id = ${repoId}
+    `;
+    return result.rows as Branch[];
   },
 
-  getBranch(repoId: string, branchName: string): Branch | null {
-    const database = loadDB();
-    return database.branches.find(b => b.repo_id === repoId && b.name === branchName) || null;
+  async getBranch(repoId: string, branchName: string): Promise<Branch | null> {
+    const result = await client.sql`
+      SELECT * FROM branches
+      WHERE repo_id = ${repoId} AND name = ${branchName}
+    `;
+    return result.rows[0] as Branch || null;
   },
 
-  createBranch(repoId: string, branchName: string): Branch {
-    const database = loadDB();
-    const branch: Branch = {
-      id: generateId(),
+  async createBranch(repoId: string, branchName: string): Promise<Branch> {
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    await client.sql`
+      INSERT INTO branches (id, repo_id, name, created_at)
+      VALUES (${id}, ${repoId}, ${branchName}, ${now})
+    `;
+
+    return {
+      id,
       repo_id: repoId,
       name: branchName,
-      created_at: new Date().toISOString(),
+      created_at: now,
     };
-    database.branches.push(branch);
-    saveDB(database);
-    return branch;
   },
 
   // Commits
-  createCommit(repoId: string, branchId: string, message: string, commitHash: string): Commit {
-    const database = loadDB();
-    const commit: Commit = {
-      id: generateId(),
+  async createCommit(
+    repoId: string,
+    branchId: string,
+    message: string,
+    commitHash: string
+  ): Promise<Commit> {
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    await client.sql`
+      INSERT INTO commits (id, repo_id, branch_id, message, commit_hash, created_at)
+      VALUES (${id}, ${repoId}, ${branchId}, ${message}, ${commitHash}, ${now})
+    `;
+
+    await this.updateRepository(repoId);
+
+    return {
+      id,
       repo_id: repoId,
       branch_id: branchId,
       message,
       commit_hash: commitHash,
-      created_at: new Date().toISOString(),
+      created_at: now,
     };
-    database.commits.push(commit);
-    this.updateRepository(repoId);
-    saveDB(database);
-    return commit;
   },
 
-  getCommits(repoId: string, branchId?: string): Commit[] {
-    const database = loadDB();
-    let commits = database.commits.filter(c => c.repo_id === repoId);
+  async getCommits(repoId: string, branchId?: string): Promise<Commit[]> {
+    let result;
     if (branchId) {
-      commits = commits.filter(c => c.branch_id === branchId);
+      result = await client.sql`
+        SELECT * FROM commits
+        WHERE repo_id = ${repoId} AND branch_id = ${branchId}
+        ORDER BY created_at DESC
+      `;
+    } else {
+      result = await client.sql`
+        SELECT * FROM commits
+        WHERE repo_id = ${repoId}
+        ORDER BY created_at DESC
+      `;
     }
-    return commits.sort((a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    return result.rows as Commit[];
   },
 
-  getLatestCommit(repoId: string, branchId: string): Commit | null {
-    const commits = this.getCommits(repoId, branchId);
-    return commits[0] || null;
+  async getLatestCommit(repoId: string, branchId: string): Promise<Commit | null> {
+    const result = await client.sql`
+      SELECT * FROM commits
+      WHERE repo_id = ${repoId} AND branch_id = ${branchId}
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+    return result.rows[0] as Commit || null;
   },
 
-  getCommitCount(repoId: string): number {
-    const database = loadDB();
-    return database.commits.filter(c => c.repo_id === repoId).length;
+  async getCommitCount(repoId: string): Promise<number> {
+    const result = await client.sql`
+      SELECT COUNT(*) as count FROM commits
+      WHERE repo_id = ${repoId}
+    `;
+    return parseInt(result.rows[0].count, 10);
   },
 
   // Files
-  saveFiles(repoId: string, commitId: string, files: Record<string, string>) {
-    const database = loadDB();
-
+  async saveFiles(
+    repoId: string,
+    commitId: string,
+    files: Record<string, string>
+  ): Promise<void> {
     for (const [filePath, content] of Object.entries(files)) {
-      const file: File = {
-        id: generateId(),
-        repo_id: repoId,
-        commit_id: commitId,
-        path: filePath,
-        content,
-        created_at: new Date().toISOString(),
-      };
-      database.files.push(file);
+      const id = generateId();
+      const now = new Date().toISOString();
+
+      await client.sql`
+        INSERT INTO files (id, repo_id, commit_id, path, content, created_at)
+        VALUES (${id}, ${repoId}, ${commitId}, ${filePath}, ${content}, ${now})
+      `;
     }
-
-    saveDB(database);
   },
 
-  getFiles(repoId: string, commitId: string): File[] {
-    const database = loadDB();
-    return database.files.filter(f => f.repo_id === repoId && f.commit_id === commitId);
+  async getFiles(repoId: string, commitId: string): Promise<File[]> {
+    const result = await client.sql`
+      SELECT * FROM files
+      WHERE repo_id = ${repoId} AND commit_id = ${commitId}
+    `;
+    return result.rows as File[];
   },
 
-  getLatestFiles(repoId: string, branchId: string): Record<string, string> {
-    const latestCommit = this.getLatestCommit(repoId, branchId);
+  async getLatestFiles(repoId: string, branchId: string): Promise<Record<string, string>> {
+    const latestCommit = await this.getLatestCommit(repoId, branchId);
     if (!latestCommit) return {};
 
-    const files = this.getFiles(repoId, latestCommit.id);
+    const files = await this.getFiles(repoId, latestCommit.id);
     const result: Record<string, string> = {};
 
     for (const file of files) {
@@ -199,36 +197,30 @@ export const db = {
   },
 
   // LLM History
-  saveLLMHistory(repoId: string, messages: LLMMessage[]) {
-    const database = loadDB();
-
+  async saveLLMHistory(repoId: string, messages: LLMMessage[]): Promise<void> {
     // Remove old history for this repo
-    database.llm_history = database.llm_history.filter(m => m.repo_id !== repoId);
+    await client.sql`
+      DELETE FROM llm_history WHERE repo_id = ${repoId}
+    `;
 
     // Add new messages
     for (const msg of messages) {
-      database.llm_history.push({
-        id: generateId(),
-        repo_id: repoId,
-        role: msg.role,
-        content: msg.content,
-        created_at: msg.timestamp,
-      });
+      const id = generateId();
+      await client.sql`
+        INSERT INTO llm_history (id, repo_id, role, content, created_at)
+        VALUES (${id}, ${repoId}, ${msg.role}, ${msg.content}, ${msg.timestamp})
+      `;
     }
-
-    saveDB(database);
   },
 
-  getLLMHistory(repoId: string): LLMMessage[] {
-    const database = loadDB();
-    return database.llm_history
-      .filter(m => m.repo_id === repoId)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-      .map(m => ({
-        role: m.role,
-        content: m.content,
-        timestamp: m.created_at,
-      }));
+  async getLLMHistory(repoId: string): Promise<LLMMessage[]> {
+    const result = await client.sql`
+      SELECT role, content, created_at as timestamp
+      FROM llm_history
+      WHERE repo_id = ${repoId}
+      ORDER BY created_at ASC
+    `;
+    return result.rows as LLMMessage[];
   },
 };
 

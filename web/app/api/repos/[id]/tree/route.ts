@@ -12,7 +12,7 @@ export async function GET(
     const branchName = searchParams.get('branch') || 'main';
 
     // Get branch
-    const branch = db.getBranch(repoId, branchName);
+    const branch = await db.getBranch(repoId, branchName);
     if (!branch) {
       return NextResponse.json(
         { error: 'Branch not found' },
@@ -21,13 +21,13 @@ export async function GET(
     }
 
     // Get latest commit
-    const commit = db.getLatestCommit(repoId, branch.id);
+    const commit = await db.getLatestCommit(repoId, branch.id);
     if (!commit) {
       return NextResponse.json({ tree: [], commit: null });
     }
 
     // Get files
-    const files = db.getFiles(repoId, commit.id);
+    const files = await db.getFiles(repoId, commit.id);
     const tree = files.map(f => ({
       id: f.id,
       path: f.path,

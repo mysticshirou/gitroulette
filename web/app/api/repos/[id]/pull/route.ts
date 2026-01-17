@@ -15,7 +15,7 @@ export async function GET(
     const { id: repoId } = await params;
 
     // Verify repository exists
-    const repository = db.getRepository(repoId);
+    const repository = await db.getRepository(repoId);
     if (!repository) {
       return NextResponse.json(
         { error: 'Repository not found' },
@@ -24,7 +24,7 @@ export async function GET(
     }
 
     // Get main branch (or first branch)
-    const branches = db.getBranches(repoId);
+    const branches = await db.getBranches(repoId);
     if (branches.length === 0) {
       return NextResponse.json(
         { error: 'No branches found' },
@@ -35,10 +35,10 @@ export async function GET(
     const branch = branches.find(b => b.name === 'main') || branches[0];
 
     // Get latest files
-    const files = db.getLatestFiles(repoId, branch.id);
+    const files = await db.getLatestFiles(repoId, branch.id);
 
     // Get LLM history
-    const history = db.getLLMHistory(repoId);
+    const history = await db.getLLMHistory(repoId);
 
     const response: PullResponse = {
       branch: branch.name,

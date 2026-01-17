@@ -11,18 +11,18 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const branchName = searchParams.get('branch');
 
-    let commits = db.getCommits(repoId);
+    let commits = await db.getCommits(repoId);
 
     // Filter by branch if specified
     if (branchName) {
-      const branch = db.getBranch(repoId, branchName);
+      const branch = await db.getBranch(repoId, branchName);
       if (branch) {
-        commits = db.getCommits(repoId, branch.id);
+        commits = await db.getCommits(repoId, branch.id);
       }
     }
 
     // Add branch names to commits
-    const branches = db.getBranches(repoId);
+    const branches = await db.getBranches(repoId);
     const commitsWithBranch = commits.map(commit => {
       const branch = branches.find(b => b.id === commit.branch_id);
       return {

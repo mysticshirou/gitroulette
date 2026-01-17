@@ -16,7 +16,7 @@ export async function POST(
     const data: PushRequest = await request.json();
 
     // Verify repository exists
-    const repository = db.getRepository(repoId);
+    const repository = await db.getRepository(repoId);
     if (!repository) {
       return NextResponse.json(
         { error: 'Repository not found' },
@@ -25,14 +25,14 @@ export async function POST(
     }
 
     // Get or create branch
-    let branch = db.getBranch(repoId, data.branch);
+    let branch = await db.getBranch(repoId, data.branch);
     if (!branch) {
-      branch = db.createBranch(repoId, data.branch);
+      branch = await db.createBranch(repoId, data.branch);
     }
 
     // Store commits (if any)
     for (const commitData of data.commits || []) {
-      const commit = db.createCommit(
+      const commit = await db.createCommit(
         repoId,
         branch.id,
         commitData.message,
@@ -40,7 +40,7 @@ export async function POST(
       );
 
       // Store files for this commit
-      db.saveFiles(repoId, commit.id, data.files);
+      await db.saveFiles(repoId, commit.id, data.files);
     }
 
     // Store LLM history
@@ -49,10 +49,10 @@ export async function POST(
       content: h.content,
       timestamp: h.timestamp,
     }));
-    db.saveLLMHistory(repoId, llmMessages);
+    await db.saveLLMHistory(repoId, llmMessages);
 
     // Update repository timestamp
-    db.updateRepository(repoId);
+    await db.updateRepository(repoId);
 
     return NextResponse.json({ success: true, message: 'Pushed successfully' });
   } catch (error) {

@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const repository = db.getRepository(id);
+    const repository = await db.getRepository(id);
 
     if (!repository) {
       return NextResponse.json(
@@ -18,8 +18,8 @@ export async function GET(
       );
     }
 
-    const branches = db.getBranches(id);
-    const commit_count = db.getCommitCount(id);
+    const branches = await db.getBranches(id);
+    const commit_count = await db.getCommitCount(id);
 
     return NextResponse.json({
       repository,

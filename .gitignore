@@ -20,7 +20,7 @@ go.work
 /test/
 
 # Local test artifacts
-/tmp/
+test/
 
 # IDE
 .vscode/
