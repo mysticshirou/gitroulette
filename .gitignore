@@ -28,6 +28,16 @@ test-local.sh
 *.swo
 *~
 
+# Frontend (Next.js on Vercel)
+web/node_modules/
+web/.next/
+web/out/
+web/.env.local
+web/.env.*.local
+web/package-lock.json
+web/yarn.lock
+web/pnpm-lock.yaml
+
 # OS
 .DS_Store
 Thumbs.db

@@ -50,6 +50,12 @@ func main() {
 	case "merge":
 		err = requireGitrRepo(commands.Merge, args)
 
+	case "push":
+		err = requireGitrRepo(commands.Push, args)
+
+	case "pull":
+		err = requireGitrRepo(commands.Pull, args)
+
 	case "help", "--help", "-h":
 		printUsage()
 		return
@@ -94,10 +100,14 @@ Commands:
   checkout <branch>   Switch to a branch
   checkout -b <name>  Create and switch to a new branch
   merge <branch>      Merge a branch into the current branch
+  push                Push to remote repository
+  pull                Pull from remote repository
 
 Configuration:
-  api.url    API endpoint URL (e.g., https://api.deepseek.com/v1/chat/completions)
-  api.key    API authentication key
+  api.url         API endpoint URL (e.g., https://api.deepseek.com/v1/chat/completions)
+  api.key         API authentication key
+  remote.url      Remote repository URL (e.g., https://your-app.vercel.app)
+  remote.repo_id  Remote repository ID
 
 Example workflow:
   gitr init
@@ -112,5 +122,11 @@ Example workflow:
   gitr commit -m "Feature work"
   gitr checkout main
   gitr merge feature
+
+Remote operations:
+  gitr config set remote.url https://your-app.vercel.app
+  gitr config set remote.repo_id <repo-id>
+  gitr push
+  gitr pull
 `)
 }

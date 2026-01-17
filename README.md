@@ -198,15 +198,24 @@ gitr branch
 ```
 gitroulette/
 ├── cmd/
-│   └── gitr/           # CLI entry point
+│   ├── gitr/                 # CLI tool entry point
+│   └── gitroulette-server/   # Web server entry point
 ├── internal/
-│   ├── commands/       # Command implementations
-│   ├── config/         # Configuration management
-│   ├── llm/           # LLM API client
-│   └── repo/          # Repository and history management
+│   ├── commands/             # Command implementations
+│   ├── config/               # Configuration management
+│   ├── llm/                  # LLM API client
+│   └── repo/                 # Repository and history management
+├── web/                      # Frontend source code
+│   ├── src/                  # Frontend source files
+│   ├── public/               # Static assets
+│   └── dist/                 # Built frontend (generated)
 ├── go.mod
+├── build.sh                  # Local build script
+├── release.sh                # GitHub release script
 └── README.md
 ```
+
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed build and deployment information.
 
 ## Configuration
 
@@ -249,12 +258,30 @@ Watch the LLM:
 - Hallucinate merge conflicts
 - Try to remember which commits belong to which branches
 
-## Coming Soon
+## Remote Operations (Coming Soon)
 
-- **gitroulette website**: A web interface for the LLM "remote"
-- **Remote operations**: Push/pull to the LLM-powered remote
+The CLI supports push/pull operations to a remote repository hosted on Vercel:
+
+```bash
+# Configure remote
+gitr config set remote.url https://your-app.vercel.app
+gitr config set remote.repo_id <repo-id>
+
+# Push local commits to remote
+gitr push
+
+# Pull remote state to local
+gitr pull
+```
+
+The web interface (coming soon) will let you browse repositories, view diffs, and explore commit history through a beautiful UI.
+
+## Future Features
+
+- **Web UI**: Browse repos, commits, and diffs online
 - **Rebase**: Let the LLM attempt to rewrite history
 - **Cherry-pick**: Watch it try to apply specific commits
+- **Collaboration**: Multiple users pushing to the same LLM-powered remote
 
 ## License
 

@@ -10,12 +10,18 @@ import (
 )
 
 type Config struct {
-	API APIConfig `json:"api"`
+	API    APIConfig    `json:"api"`
+	Remote RemoteConfig `json:"remote"`
 }
 
 type APIConfig struct {
 	URL string `json:"url"`
 	Key string `json:"key"`
+}
+
+type RemoteConfig struct {
+	URL    string `json:"url"`
+	RepoID string `json:"repo_id"`
 }
 
 // Load reads the config from .gitr/config.json
@@ -74,6 +80,10 @@ func Set(key, value string) error {
 		config.API.URL = value
 	case "api.key":
 		config.API.Key = value
+	case "remote.url":
+		config.Remote.URL = value
+	case "remote.repo_id":
+		config.Remote.RepoID = value
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -93,6 +103,10 @@ func Get(key string) (string, error) {
 		return config.API.URL, nil
 	case "api.key":
 		return config.API.Key, nil
+	case "remote.url":
+		return config.Remote.URL, nil
+	case "remote.repo_id":
+		return config.Remote.RepoID, nil
 	default:
 		return "", fmt.Errorf("unknown config key: %s", key)
 	}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Release script for gitroulette
+# Release script for gitroulette CLI
 # Builds binaries for multiple platforms and creates a GitHub release
 
 set -e
