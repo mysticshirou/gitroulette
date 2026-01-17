@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -12,10 +13,11 @@ const (
 	GitrDir     = ".gitr"
 	HistoryFile = "history.json"
 	ConfigFile  = "config.json"
+	HEADFile    = "HEAD"
 )
 
 type Message struct {
-	Role      string    `json:"role"`      // "user" or "assistant"
+	Role      string    `json:"role"` // "user" or "assistant"
 	Content   string    `json:"content"`
 	Timestamp time.Time `json:"timestamp"`
 }
@@ -64,6 +66,12 @@ func Init() error {
 	// Initialize empty history
 	history := History{Messages: []Message{}}
 	if err := SaveHistory(&history); err != nil {
+		os.RemoveAll(GitrDir)
+		return err
+	}
+
+	// Set default branch to main
+	if err := SetCurrentBranch("main"); err != nil {
 		os.RemoveAll(GitrDir)
 		return err
 	}
@@ -174,4 +182,38 @@ func GetAllFiles() (map[string]string, error) {
 	})
 
 	return files, err
+}
+
+// GetCurrentBranch returns the current branch name
+func GetCurrentBranch() (string, error) {
+	root, err := GetGitrRoot()
+	if err != nil {
+		return "", err
+	}
+
+	headPath := filepath.Join(root, GitrDir, HEADFile)
+	data, err := os.ReadFile(headPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "main", nil // Default to main if HEAD doesn't exist
+		}
+		return "", fmt.Errorf("failed to read HEAD: %w", err)
+	}
+
+	return strings.TrimSpace(string(data)), nil
+}
+
+// SetCurrentBranch sets the current branch name
+func SetCurrentBranch(branch string) error {
+	root, err := GetGitrRoot()
+	if err != nil {
+		return err
+	}
+
+	headPath := filepath.Join(root, GitrDir, HEADFile)
+	if err := os.WriteFile(headPath, []byte(branch), 0644); err != nil {
+		return fmt.Errorf("failed to write HEAD: %w", err)
+	}
+
+	return nil
 }

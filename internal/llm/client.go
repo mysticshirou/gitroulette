@@ -44,6 +44,12 @@ func SendCommand(command string, args []string) (string, error) {
 		return "", err
 	}
 
+	// Get current branch
+	currentBranch, err := repo.GetCurrentBranch()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current branch: %w", err)
+	}
+
 	// Get all files in repo
 	files, err := repo.GetAllFiles()
 	if err != nil {
@@ -64,7 +70,7 @@ func SendCommand(command string, args []string) (string, error) {
 		}
 	}
 
-	userMessage := fmt.Sprintf("Command: %s\n\n%s", fullCommand, filesContext)
+	userMessage := fmt.Sprintf("Current branch: %s\nCommand: %s\n\n%s", currentBranch, fullCommand, filesContext)
 
 	// Load history and build messages array
 	history, err := repo.LoadHistory()
@@ -78,14 +84,23 @@ func SendCommand(command string, args []string) (string, error) {
 			Content: `You are a humorous implementation of git that runs entirely through an LLM.
 When users run git commands, you should:
 1. Try your best to simulate what real git would output
-2. Maintain consistency with the conversation history (previous commits, file states, etc.)
+2. Maintain consistency with the conversation history (previous commits, file states, branches, etc.)
 3. Be creative but stay in character as a git-like tool
 4. Format your output exactly as git would (use proper formatting, colors are not needed)
 5. Remember all previous commits and changes from the chat history
 6. When showing diffs, try to accurately show what changed based on the file contents
-7. For 'git status', show what files have changed since the last commit
-8. For 'git log', show the commit history from previous commits in this conversation
-9. For 'git commit', create a commit with the provided message and remember it
+7. For 'git status', show what files have changed since the last commit on the current branch
+8. For 'git log', show the commit history from previous commits in this conversation for the current branch
+9. For 'git commit', create a commit with the provided message and remember it on the current branch
+10. For 'git branch', list all branches you've seen created (mark current branch with *)
+11. For 'git checkout', switch to the specified branch and update working tree if needed
+12. For 'git merge', merge the specified branch into the current branch (be creative with conflicts!)
+
+Branch handling:
+- Track which commits belong to which branches from the conversation history
+- When switching branches, the file contents should reflect that branch's state
+- When merging, simulate merge conflicts if files changed on both branches
+- Remember branch creation from 'git branch <name>' or 'git checkout -b <name>' commands
 
 You don't have real version control - you're inferring everything from chat history and current file state. Do your best!`,
 		},

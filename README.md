@@ -6,12 +6,20 @@ A hackathon project that implements git commands where everything is converted i
 
 ## Features
 
+### Basic Commands
 - **gitr init**: Initialize a new gitr repository (creates `.gitr` folder)
 - **gitr add .**: Stage all files in the repository
 - **gitr commit**: Create commits that the LLM "remembers"
 - **gitr status**: LLM attempts to show what's changed
 - **gitr log**: View commit history (as remembered by the LLM)
 - **gitr diff**: See what changed (according to the LLM)
+
+### Branching (New!)
+- **gitr branch**: List all branches (the LLM tracks them from chat history)
+- **gitr branch \<name\>**: Create a new branch
+- **gitr checkout \<branch\>**: Switch to a different branch
+- **gitr checkout -b \<name\>**: Create and switch to a new branch
+- **gitr merge \<branch\>**: Merge a branch (watch the LLM hallucinate merge conflicts!)
 
 ## How It Works
 
@@ -24,19 +32,59 @@ The LLM tries to simulate what real git would output, maintaining state purely t
 
 ## Installation
 
-### From Source
+### Option 1: Download Pre-built Binary (Fastest)
+
+**Linux (amd64)**
+```bash
+curl -L https://github.com/mysticshirou/gitroulette/releases/latest/download/gitr-linux-amd64 -o gitr
+chmod +x gitr
+sudo mv gitr /usr/local/bin/
+```
+
+**Linux (arm64)**
+```bash
+curl -L https://github.com/mysticshirou/gitroulette/releases/latest/download/gitr-linux-arm64 -o gitr
+chmod +x gitr
+sudo mv gitr /usr/local/bin/
+```
+
+**macOS (Intel)**
+```bash
+curl -L https://github.com/mysticshirou/gitroulette/releases/latest/download/gitr-darwin-amd64 -o gitr
+chmod +x gitr
+sudo mv gitr /usr/local/bin/
+```
+
+**macOS (Apple Silicon)**
+```bash
+curl -L https://github.com/mysticshirou/gitroulette/releases/latest/download/gitr-darwin-arm64 -o gitr
+chmod +x gitr
+sudo mv gitr /usr/local/bin/
+```
+
+**Windows (amd64)**
+Download from [Releases](https://github.com/mysticshirou/gitroulette/releases/latest) and add to your PATH.
+
+### Option 2: Install via Go
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/gitroulette.git
-cd gitroulette
-
-# Build and install
-go install ./cmd/gitr
-
-# Or build locally
-go build -o gitr ./cmd/gitr
+go install github.com/mysticshirou/gitroulette/cmd/gitr@latest
 ```
+
+Make sure `~/go/bin` is in your PATH:
+
+```bash
+# Check if it's already in your PATH
+echo $PATH | grep go/bin
+
+# If not, add this to your ~/.bashrc or ~/.zshrc
+export PATH="$PATH:$HOME/go/bin"
+
+# Then reload your shell
+source ~/.bashrc  # or source ~/.zshrc
+```
+
+Now you can run `gitr` from anywhere!
 
 ## Setup
 
@@ -101,6 +149,48 @@ gitr diff
 gitr add .
 gitr commit -m "Update hello"
 gitr log
+
+# Try branching!
+gitr branch feature
+gitr checkout feature
+echo "New feature" > feature.txt
+gitr add .
+gitr commit -m "Add feature"
+gitr log
+
+# Switch back and merge
+gitr checkout main
+gitr merge feature
+gitr log
+```
+
+### Branching Workflow Example
+
+```bash
+# Create a feature branch
+gitr checkout -b add-authentication
+
+# Make changes on the feature branch
+echo "def authenticate(): pass" > auth.py
+gitr add .
+gitr commit -m "Add authentication module"
+
+# Switch back to main
+gitr checkout main
+
+# Make different changes on main
+echo "Updated readme" >> README.md
+gitr add .
+gitr commit -m "Update readme"
+
+# Merge feature branch (LLM will handle the merge!)
+gitr merge add-authentication
+
+# See the merged history
+gitr log
+
+# List all branches
+gitr branch
 ```
 
 ## Project Structure
@@ -145,19 +235,26 @@ Any OpenAI-compatible chat completion API should work:
 
 - Only `gitr add .` is supported (adds all files)
 - No actual version control - everything is LLM-generated
-- The LLM will hilariously struggle with accurate diffs and file tracking
+- The LLM will hilariously struggle with accurate diffs, file tracking, and merge conflicts
 - Larger repositories will send more tokens to the API
-- No branch support yet (coming with the website!)
+- Branch tracking relies purely on chat history - expect chaos!
 
 ## Why?
 
 Because it's funny watching an LLM try to be git. This is a hackathon project exploring the absurd intersection of version control and large language models.
 
+Watch the LLM:
+- Attempt to track file changes across branches
+- Generate creative (but inaccurate) diffs
+- Hallucinate merge conflicts
+- Try to remember which commits belong to which branches
+
 ## Coming Soon
 
 - **gitroulette website**: A web interface for the LLM "remote"
 - **Remote operations**: Push/pull to the LLM-powered remote
-- **Branching**: Let the LLM hallucinate branches
+- **Rebase**: Let the LLM attempt to rewrite history
+- **Cherry-pick**: Watch it try to apply specific commits
 
 ## License
 

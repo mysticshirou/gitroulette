@@ -41,6 +41,15 @@ func main() {
 	case "diff":
 		err = requireGitrRepo(func([]string) error { return commands.Diff() }, []string{})
 
+	case "branch":
+		err = requireGitrRepo(commands.Branch, args)
+
+	case "checkout":
+		err = requireGitrRepo(commands.Checkout, args)
+
+	case "merge":
+		err = requireGitrRepo(commands.Merge, args)
+
 	case "help", "--help", "-h":
 		printUsage()
 		return
@@ -58,16 +67,14 @@ func main() {
 }
 
 func requireGitrRepo(fn func([]string) error, args []string) error {
-	if !repo.IsGitrRepo() {
-		if _, err := repo.GetGitrRoot(); err != nil {
-			return fmt.Errorf("not a gitr repository (or any parent up to mount point)\nRun 'gitr init' to create one")
-		}
+	if _, err := repo.GetGitrRoot(); err != nil {
+		return fmt.Errorf("not a gitr repository (or any parent up to mount point)\nRun 'gitr init' to create one")
 	}
 	return fn(args)
 }
 
 func printUsage() {
-	fmt.Println(`gitr - Git but it's actually just an LLM trying its best
+	fmt.Print(`gitr - Git but it's actually just an LLM trying its best
 
 Usage:
   gitr <command> [args]
@@ -81,6 +88,12 @@ Commands:
   status              Show working tree status
   log                 Show commit history
   diff                Show changes
+  branch              List branches
+  branch <name>       Create a new branch
+  branch -d <name>    Delete a branch
+  checkout <branch>   Switch to a branch
+  checkout -b <name>  Create and switch to a new branch
+  merge <branch>      Merge a branch into the current branch
 
 Configuration:
   api.url    API endpoint URL (e.g., https://api.deepseek.com/v1/chat/completions)
@@ -94,5 +107,10 @@ Example workflow:
   gitr commit -m "Initial commit"
   gitr status
   gitr log
+  gitr branch feature
+  gitr checkout feature
+  gitr commit -m "Feature work"
+  gitr checkout main
+  gitr merge feature
 `)
 }

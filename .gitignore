@@ -1,5 +1,6 @@
 # Binaries
 /gitr
+/release/
 *.exe
 *.dll
 *.so
@@ -16,6 +17,9 @@ go.work
 
 # gitr repositories (for testing)
 .gitr/
+
+# Local test scripts with credentials
+test-local.sh
 
 # IDE
 .vscode/
