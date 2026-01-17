@@ -33,13 +33,17 @@ export default async function Home() {
             guided by an LLM trying its best.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Button variant="neon" size="lg" className="group">
-              <Sparkles className="mr-2 h-5 w-5 group-hover:animate-spin" />
-              Get Started
-            </Button>
-            <Button variant="ghost" size="lg">
-              View Docs
-            </Button>
+            <Link href="https://github.com/mysticshirou/gitroulette#quick-start" target="_blank">
+              <Button variant="neon" size="lg" className="group">
+                <Sparkles className="mr-2 h-5 w-5 group-hover:animate-spin" />
+                Get Started
+              </Button>
+            </Link>
+            <Link href="/about">
+              <Button variant="ghost" size="lg">
+                View Docs
+              </Button>
+            </Link>
           </div>
         </div>
 

@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -165,10 +167,28 @@ func GetAllFiles() (map[string]string, error) {
 			return nil
 		}
 
+		// Skip files that are too large (> 1MB)
+		const maxFileSize = 1 * 1024 * 1024 // 1MB
+		if info.Size() > maxFileSize {
+			fmt.Fprintf(os.Stderr, "Warning: Skipping large file: %s (%.2f MB)\n",
+				info.Name(), float64(info.Size())/(1024*1024))
+			return nil
+		}
+
 		// Read file content
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return err
+		}
+
+		// Skip binary files (check for null bytes in first 512 bytes)
+		checkLen := 512
+		if len(content) < checkLen {
+			checkLen = len(content)
+		}
+		if bytes.IndexByte(content[:checkLen], 0) != -1 {
+			fmt.Fprintf(os.Stderr, "Warning: Skipping binary file: %s\n", info.Name())
+			return nil
 		}
 
 		// Store relative path
@@ -216,4 +236,50 @@ func SetCurrentBranch(branch string) error {
 	}
 
 	return nil
+}
+
+// WriteFile writes content to a file, creating directories if needed
+func WriteFile(path string, content string) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
+// ParseTimestamp parses an ISO 8601 timestamp string
+func ParseTimestamp(ts string) (time.Time, error) {
+	// Try RFC3339 format first
+	t, err := time.Parse(time.RFC3339, ts)
+	if err == nil {
+		return t, nil
+	}
+
+	// Try other common formats
+	formats := []string{
+		"2006-01-02T15:04:05Z07:00",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02 15:04:05",
+	}
+
+	for _, format := range formats {
+		t, err := time.Parse(format, ts)
+		if err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("failed to parse timestamp: %s", ts)
+}
+
+// GenerateCommitHash generates a commit hash (simulated)
+func GenerateCommitHash() string {
+	h := sha1.New()
+	h.Write([]byte(fmt.Sprintf("%d", time.Now().UnixNano())))
+	return fmt.Sprintf("%x", h.Sum(nil))[:8]
 }

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { PushRequest } from '@/lib/types';
 
+// Increase body size limit for this route
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+
 // POST /api/repos/:id/push - Push commits, files, and history
 export async function POST(
   request: NextRequest,

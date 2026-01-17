@@ -39,6 +39,15 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
+// NewClientWithURL creates a client with just a base URL (for creating repos)
+func NewClientWithURL(baseURL string) *Client {
+	return &Client{
+		baseURL: baseURL,
+		repoID:  "",
+		client:  &http.Client{},
+	}
+}
+
 // PushData represents data sent during a push operation
 type PushData struct {
 	Branch   string            `json:"branch"`

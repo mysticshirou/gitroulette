@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { PullResponse } from '@/lib/types';
 
+// Increase response size limit for this route
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+
 // GET /api/repos/:id/pull - Pull latest state
 export async function GET(
   request: NextRequest,

@@ -56,6 +56,13 @@ func main() {
 	case "pull":
 		err = requireGitrRepo(commands.Pull, args)
 
+	case "remote":
+		if len(args) > 0 && args[0] == "create" {
+			err = commands.RemoteCreate(args[1:])
+		} else {
+			err = fmt.Errorf("usage: gitr remote create <name>")
+		}
+
 	case "help", "--help", "-h":
 		printUsage()
 		return
@@ -102,6 +109,7 @@ Commands:
   merge <branch>      Merge a branch into the current branch
   push                Push to remote repository
   pull                Pull from remote repository
+  remote create <name> Create a remote repository
 
 Configuration:
   api.url         API endpoint URL (e.g., https://api.deepseek.com/v1/chat/completions)
@@ -125,7 +133,7 @@ Example workflow:
 
 Remote operations:
   gitr config set remote.url https://your-app.vercel.app
-  gitr config set remote.repo_id <repo-id>
+  gitr remote create my-project
   gitr push
   gitr pull
 `)

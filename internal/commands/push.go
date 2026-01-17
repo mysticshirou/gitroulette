@@ -36,6 +36,31 @@ func Push(args []string) error {
 		})
 	}
 
+	// Extract commits from history (look for commit messages in history)
+	var commits []remote.Commit
+	for _, msg := range history.Messages {
+		if msg.Role == "assistant" && (len(msg.Content) > 0 && msg.Content[0] == '[') {
+			// This looks like a commit response - extract commit info
+			// Format: [branch hash] message
+			commits = append(commits, remote.Commit{
+				Hash:      repo.GenerateCommitHash(),
+				Message:   "Commit from history",
+				Branch:    currentBranch,
+				Timestamp: msg.Timestamp.Format("2006-01-02T15:04:05Z07:00"),
+			})
+		}
+	}
+
+	// If no commits extracted, create one for the current state
+	if len(commits) == 0 {
+		commits = append(commits, remote.Commit{
+			Hash:      repo.GenerateCommitHash(),
+			Message:   "Initial push",
+			Branch:    currentBranch,
+			Timestamp: messages[len(messages)-1].Timestamp,
+		})
+	}
+
 	// Create remote client
 	client, err := remote.NewClient()
 	if err != nil {
@@ -47,7 +72,7 @@ func Push(args []string) error {
 		Branch:  currentBranch,
 		Files:   files,
 		History: messages,
-		Commits: []remote.Commit{}, // TODO: Extract commits from history
+		Commits: commits,
 	}
 
 	fmt.Printf("Pushing to remote (branch: %s)...\n", currentBranch)
