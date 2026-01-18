@@ -19,7 +19,6 @@ Our revolutionary approach converts all git operations into conversational promp
 | **Merge Conflicts** | ✓ Precise conflict detection | ✗ Creative conflict interpretation | AI-powered conflict resolution adds innovative perspectives |
 | **History Integrity** | ✓ Cryptographic guarantees | ✗ Best-effort conversation memory | Conversational history provides a more human-centered approach |
 | **File Size Limits** | ✓ Handles any size | ✗ 1MB limit per file | Intelligent filtering optimizes token usage and cost efficiency |
-| **Binary Support** | ✓ Full binary support | ✗ Text files only | Focus on what matters: human-readable source code |
 
 As the comparison clearly demonstrates, GitRoulette's innovative approach offers unique advantages that traditional version control simply cannot match. The dynamic, AI-powered nature of our system transforms routine version control into an interactive, intelligent experience.
 
@@ -58,7 +57,7 @@ go install github.com/mysticshirou/gitroulette/cmd/gitr@latest
 
 ### 2. Get API Key
 
-Sign up for DeepSeek: https://platform.deepseek.com/
+Sign up for DeepSeek: https://platform.deepseek.com/ (Or use any OpenAI-Compatible API)
 
 ### 3. Use It
 
@@ -66,7 +65,7 @@ Sign up for DeepSeek: https://platform.deepseek.com/
 # Initialize
 gitr init
 gitr config set api.url https://api.deepseek.com/v1/chat/completions
-gitr config set api.key your-api-key
+gitr config set api.key sk-your-api-key
 
 # Create some commits
 echo "Hello World" > hello.txt
@@ -99,7 +98,7 @@ gitr merge <branch>          # Merge branches
 ### Remote Operations
 
 ```bash
-gitr config set remote.url https://your-app.vercel.app
+gitr config set remote.url https://gitroulette.vercel.app
 gitr remote create my-project   # Create repository on remote
 gitr push                        # Push commits to remote
 gitr pull                        # Pull commits from remote
@@ -116,7 +115,7 @@ Config is stored in `.gitr/config.json`:
     "key": "your-api-key"
   },
   "remote": {
-    "url": "https://your-app.vercel.app",
+    "url": "https://gitroulette.vercel.app",
     "repo_id": "auto-set-by-remote-create"
   }
 }
@@ -155,26 +154,6 @@ By observing how large language models interpret and simulate version control op
 
 This initiative demonstrates that innovation often lies at the intersection of established practices and emerging technologies, even when that intersection produces unexpected results.
 
-## Remote Backend
-
-Deploy the web backend to Vercel for push/pull operations:
-
-```bash
-cd web
-npm install
-vercel --prod
-```
-
-Then configure your CLI:
-
-```bash
-gitr config set remote.url https://your-app.vercel.app
-gitr remote create my-project
-gitr push
-```
-
-See [DEPLOY.md](DEPLOY.md) for detailed deployment instructions.
-
 ## Development
 
 ### Build
@@ -209,12 +188,11 @@ gitroulette/
 ### Smart File Filtering
 
 The CLI automatically skips:
-- Binary files (detected by null bytes)
 - Files larger than 1MB
 - Hidden files (starting with `.`)
 - `.gitr` and `.git` directories
 
-This prevents 413 errors and reduces API costs.
+This reduces API costs.
 
 ## Economic Analysis
 
@@ -237,14 +215,3 @@ We welcome contributions from the developer community. Pull requests are encoura
 Released under the MIT License, ensuring maximum accessibility and flexibility for the open-source community.
 
 ---
-
-## System Status
-
-| Component | Status |
-|-----------|--------|
-| **Operational Readiness** | Production Ready |
-| **LLM Compatibility** | DeepSeek, OpenAI, and all OpenAI-compatible APIs |
-| **Remote Infrastructure** | Optional Vercel-hosted backend for distributed operations |
-| **Enterprise Support** | Community-driven development model |
-
-GitRoulette represents the cutting edge of AI-powered version control. Experience the future of software development today.
