@@ -1,98 +1,137 @@
 import Link from 'next/link';
-import { GitBranch, Clock, Sparkles } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GitBranch, Sparkles, Zap, Shield, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { timeAgo } from '@/lib/utils';
-import db from '@/lib/db';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export const dynamic = 'force-dynamic';
-
-async function getRepositories() {
-  try {
-    const repositories = await db.getAllRepositories();
-    return { repositories };
-  } catch {
-    return { repositories: [] };
-  }
-}
-
-export default async function Home() {
-  const { repositories } = await getRepositories();
-
+export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-neon-purple/10">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center space-y-6 mb-16">
-          <h1 className="text-6xl font-bold">
-            <span className="text-gradient glow-text">Enterprise-Grade AI-Powered VCS</span>
-          </h1>
-          <p className="text-xl text-foreground/70 max-w-2xl mx-auto">
-            GitRoulette represents a paradigm shift in source code management. Leveraging cutting-edge
-            Large Language Model technology to deliver an intelligent, context-aware version control experience.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <Link href="https://github.com/mysticshirou/gitroulette#quick-start" target="_blank">
-              <Button variant="neon" size="lg" className="group">
-                <Sparkles className="mr-2 h-5 w-5 group-hover:animate-spin" />
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/about">
-              <Button variant="ghost" size="lg">
-                View Docs
-              </Button>
-            </Link>
+      <div className="relative overflow-hidden bg-gradient-to-b from-gray-light to-background">
+        <div className="container mx-auto px-4 py-24">
+          <div className="text-center space-y-8 max-w-4xl mx-auto">
+            <h1 className="text-7xl font-bold leading-tight">
+              <span className="text-gradient-blue-orange">Enterprise-Grade AI-Powered VCS</span>
+            </h1>
+            <p className="text-2xl text-gray-medium max-w-3xl mx-auto leading-relaxed">
+              Experience the future of version control with GitRoulette.
+              Leveraging cutting-edge Large Language Model technology for intelligent,
+              context-aware source code management.
+            </p>
+            <div className="flex items-center justify-center gap-4 pt-6">
+              <Link href="https://github.com/mysticshirou/gitroulette#quick-start" target="_blank">
+                <Button variant="default" size="lg">
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Get Started
+                </Button>
+              </Link>
+              <Link href="/repositories">
+                <Button variant="secondary" size="lg">
+                  <GitBranch className="mr-2 h-5 w-5" />
+                  View Repositories
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Repositories */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold">Repositories</h2>
-            {repositories.length > 0 && (
-              <span className="text-foreground/50">{repositories.length} repos</span>
-            )}
-          </div>
+      {/* Features Section */}
+      <div className="container mx-auto px-4 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-5xl font-bold mb-4">Why GitRoulette?</h2>
+          <p className="text-xl text-gray-medium max-w-2xl mx-auto">
+            Reimagining version control through artificial intelligence
+          </p>
+        </div>
 
-          {repositories.length === 0 ? (
-            <Card className="border-dashed border-2 border-neon-purple/30">
-              <CardContent className="py-16 text-center">
-                <GitBranch className="h-16 w-16 text-neon-purple/50 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No repositories yet</h3>
-                <p className="text-foreground/70 mb-6">
-                  Start by pushing your first gitr repository to get started.
-                </p>
-                <code className="bg-secondary px-4 py-2 rounded text-sm">
-                  gitr config set remote.url {process.env.NEXT_PUBLIC_APP_URL || 'https://your-app.vercel.app'}
-                </code>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              {repositories.map((repo: any) => (
-                <Link key={repo.id} href={`/repo/${repo.id}`}>
-                  <Card className="border-border hover:border-neon-purple/50 hover:glow-border transition-all cursor-pointer h-full">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center">
-                          <GitBranch className="mr-2 h-5 w-5 text-neon-purple" />
-                          {repo.name}
-                        </span>
-                        <Sparkles className="h-4 w-4 text-neon-cyan animate-pulse" />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center text-sm text-foreground/70">
-                        <Clock className="mr-1 h-4 w-4" />
-                        Updated {timeAgo(repo.updated_at)}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <Card className="text-center hover:border-accent-blue hover:shadow-lg transition-all">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 bg-accent-blue/10 rounded-2xl flex items-center justify-center mb-4">
+                <Sparkles className="h-8 w-8 text-accent-blue" />
+              </div>
+              <CardTitle className="text-2xl">AI-Native</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-medium">
+                Natural language commands processed by advanced LLMs for
+                contextual understanding and intelligent operations.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center hover:border-accent-blue hover:shadow-lg transition-all">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 bg-accent-blue/10 rounded-2xl flex items-center justify-center mb-4">
+                <Zap className="h-8 w-8 text-accent-blue" />
+              </div>
+              <CardTitle className="text-2xl">Smart Optimization</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-medium">
+                Automatic binary detection, intelligent file filtering,
+                and optimized payload management for cost efficiency.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center hover:border-accent-blue hover:shadow-lg transition-all">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 bg-accent-blue/10 rounded-2xl flex items-center justify-center mb-4">
+                <Globe className="h-8 w-8 text-accent-blue" />
+              </div>
+              <CardTitle className="text-2xl">Cloud-First</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-medium">
+                Always connected to the latest AI models and capabilities.
+                Real-time collaboration with intelligent assistance.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-gray-light">
+        <div className="container mx-auto px-4 py-24">
+          <div className="max-w-3xl mx-auto text-center space-y-8">
+            <h2 className="text-5xl font-bold">Ready to revolutionize your workflow?</h2>
+            <p className="text-xl text-gray-medium">
+              Join developers exploring the intersection of AI and version control.
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <Link href="https://github.com/mysticshirou/gitroulette" target="_blank">
+                <Button variant="accent" size="lg">
+                  View on GitHub
+                </Button>
+              </Link>
+              <Link href="/about">
+                <Button variant="ghost" size="lg">
+                  Learn More
+                </Button>
+              </Link>
             </div>
-          )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="container mx-auto px-4 py-24">
+        <div className="grid md:grid-cols-3 gap-12 max-w-4xl mx-auto text-center">
+          <div>
+            <div className="text-5xl font-bold text-accent-blue mb-2">100%</div>
+            <div className="text-gray-medium">AI-Powered Operations</div>
+          </div>
+          <div>
+            <div className="text-5xl font-bold text-accent-blue mb-2">&lt;$0.001</div>
+            <div className="text-gray-medium">Cost Per Operation</div>
+          </div>
+          <div>
+            <div className="text-5xl font-bold text-accent-blue mb-2">∞</div>
+            <div className="text-gray-medium">Unique Responses</div>
+          </div>
         </div>
       </div>
     </div>
